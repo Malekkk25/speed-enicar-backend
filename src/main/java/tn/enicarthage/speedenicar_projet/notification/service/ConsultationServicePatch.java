@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import tn.enicarthage.speedenicar_projet.common.enums.AppointmentStatus;
 import tn.enicarthage.speedenicar_projet.common.exception.ResourceNotFoundException;
@@ -28,7 +27,6 @@ public class ConsultationServicePatch {
     private final ConsultationSessionRepository sessionRepository;
     private final ApplicationEventPublisher eventPublisher;
 
-    @Transactional
     public ConsultationDto.SessionResponse createSession(Long appointmentId, User currentUser) {
 
         // 1. Récupération du rendez-vous

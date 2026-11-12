@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import tn.enicarthage.speedenicar_projet.common.enums.DocStatus;
 import tn.enicarthage.speedenicar_projet.module_psychologue.document.MedicalDocument;
@@ -38,7 +37,6 @@ public class MedicalDocumentService {
     // STUDENT
     // ─────────────────────────────────────────────
 
-    @Transactional
     public MedicalDocumentResponse uploadForStudent(Long userId,
                                                     MultipartFile file,
                                                     String type) {
@@ -61,7 +59,6 @@ public class MedicalDocumentService {
         return mapToDto(medicalDocumentRepository.save(doc));
     }
 
-    @Transactional(readOnly = true)
     public List<MedicalDocumentResponse> getStudentDocuments(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur introuvable"));
@@ -75,7 +72,6 @@ public class MedicalDocumentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public void deleteDocument(Long docId, Long userId) {
         MedicalDocument doc = medicalDocumentRepository.findById(docId)
                 .orElseThrow(() -> new RuntimeException("Document introuvable"));
@@ -95,7 +91,6 @@ public class MedicalDocumentService {
     // PSY (voit tout — psy unique dans l'app)
     // ─────────────────────────────────────────────
 
-    @Transactional(readOnly = true)
     public List<MedicalDocumentResponse> getAllDocuments() {
         return medicalDocumentRepository.findAll()
                 .stream()
@@ -103,7 +98,6 @@ public class MedicalDocumentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public List<MedicalDocumentResponse> getDocumentsByStudent(Long studentId) {
         return medicalDocumentRepository.findByStudentIdOrderByCreatedAtDesc(studentId)
                 .stream()
@@ -111,7 +105,6 @@ public class MedicalDocumentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
     public List<MedicalDocumentResponse> getDocumentsByStatus(DocStatus status) {
         return medicalDocumentRepository.findByStatusOrderByCreatedAtAsc(status)
                 .stream()
@@ -119,7 +112,6 @@ public class MedicalDocumentService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public MedicalDocumentResponse validateDocument(Long docId, Long psyUserId) {
         MedicalDocument doc = getMedicalDocumentOrThrow(docId);
 
@@ -134,7 +126,6 @@ public class MedicalDocumentService {
         return mapToDto(medicalDocumentRepository.save(doc));
     }
 
-    @Transactional
     public MedicalDocumentResponse rejectDocument(Long docId,
                                                   Long psyUserId,
                                                   String reason) {
@@ -159,7 +150,6 @@ public class MedicalDocumentService {
     // TÉLÉCHARGEMENT (student + psy)
     // ─────────────────────────────────────────────
 
-    @Transactional(readOnly = true)
     public Resource downloadDocument(Long docId) {
         MedicalDocument doc = getMedicalDocumentOrThrow(docId);
         try {

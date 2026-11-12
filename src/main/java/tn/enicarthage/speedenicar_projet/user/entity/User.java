@@ -1,10 +1,13 @@
 package tn.enicarthage.speedenicar_projet.user.entity;
 
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 
 
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -21,25 +24,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-@Entity
-@Table(name = "users", indexes = {
-        @Index(name = "idx_user_email", columnList = "email", unique = true),
-        @Index(name = "idx_user_role", columnList = "role")
-})
+@Document(collection = "users")
 @Builder
 @Getter @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class User extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
     private String firstName;
     private String lastName;
+    @Indexed(unique = true)
     private String email;
     private String password;
     private String phone;
-    @Enumerated(EnumType.STRING)
+    @Indexed
     private Role role; // STUDENT, PSYCHOLOGIST, etc.
 
     // --- CHAMPS AJOUTÉS (Anciennement dans PsychologistProfile) ---

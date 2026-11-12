@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.student.entity.JournalEntry;
 import tn.enicarthage.speedenicar_projet.student.entity.StudentProfile;
 import tn.enicarthage.speedenicar_projet.student.repository.JournalEntryRepository;
@@ -12,7 +11,6 @@ import tn.enicarthage.speedenicar_projet.student.repository.StudentProfileReposi
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class JournalEntryService {
 
     private final JournalEntryRepository journalEntryRepository;
@@ -29,7 +27,6 @@ public class JournalEntryService {
 
     // ── Liste paginée ────────────────────────────────────────
 
-    @Transactional(readOnly = true)
     public Page<JournalEntry> getEntries(Long userId, Pageable pageable) {
         StudentProfile student = getStudentByUserId(userId);
         return journalEntryRepository

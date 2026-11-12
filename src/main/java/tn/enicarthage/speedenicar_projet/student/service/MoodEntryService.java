@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.student.entity.MoodEntry;
 import tn.enicarthage.speedenicar_projet.student.entity.StudentProfile;
 import tn.enicarthage.speedenicar_projet.student.repository.MoodEntryRepository;
@@ -16,7 +15,6 @@ import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
-@Transactional
 public class MoodEntryService {
 
     private final MoodEntryRepository moodEntryRepository;
@@ -38,7 +36,6 @@ public class MoodEntryService {
 
     // ── Historique paginé ────────────────────────────────────
 
-    @Transactional(readOnly = true)
     public Page<MoodEntry> getMoods(Long userId, Pageable pageable) {
         StudentProfile student = getStudentByUserId(userId);
         return moodEntryRepository
@@ -47,7 +44,6 @@ public class MoodEntryService {
 
     // ── Statistiques (semaine / mois) ────────────────────────
 
-    @Transactional(readOnly = true)
     public Map<String, Object> getMoodStats(Long userId, String period) {
         StudentProfile student = getStudentByUserId(userId);
 

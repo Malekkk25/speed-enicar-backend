@@ -1,32 +1,23 @@
 package tn.enicarthage.speedenicar_projet.student.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import tn.enicarthage.speedenicar_projet.student.entity.StudentProfile;
 
 import java.util.Optional;
 
 @Repository
-public interface StudentProfileRepository extends JpaRepository<StudentProfile, Long> {
-    // Spring va comprendre : "Cherche un StudentProfile dont le User associé a cet email"
-    Optional<StudentProfile> findByUserEmail(String email);
+public interface StudentProfileRepository extends MongoRepository<StudentProfile, Long> {
 
+    @Query("{ 'user.$id': ?0 }")
     Optional<StudentProfile> findByUserId(Long userId);
 
     boolean existsByStudentId(String studentId);
 
-    @Query("SELECT sp FROM StudentProfile sp " +
-            "JOIN FETCH sp.user u " +
-            "WHERE u.id = :userId AND sp.deleted = false")
-    Optional<StudentProfile> findByUserIdWithUser(@Param("userId") Long userId);
+    @Query("{ 'user.$id': ?0, 'deleted': false }")
+    Optional<StudentProfile> findByUserIdWithUser(Long userId);
 
-    @Query("SELECT sp FROM StudentProfile sp " +
-            "JOIN FETCH sp.user u " +
-            "WHERE sp.studentId = :studentId AND sp.deleted = false")
-    Optional<StudentProfile> findByStudentIdWithUser(@Param("studentId") String studentId);
-
-
+    @Query("{ 'studentId': ?0, 'deleted': false }")
+    Optional<StudentProfile> findByStudentIdWithUser(String studentId);
 }
-

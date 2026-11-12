@@ -1,6 +1,9 @@
 package tn.enicarthage.speedenicar_projet.student.entity;
 
-import jakarta.persistence.*;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import tn.enicarthage.speedenicar_projet.common.BaseEntity;
@@ -9,12 +12,7 @@ import tn.enicarthage.speedenicar_projet.module_psychologue.document.MedicalDocu
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
-@Entity
-@Table(name = "absences", indexes = {
-        @Index(name = "idx_absence_student", columnList = "student_id"),
-        @Index(name = "idx_absence_dates", columnList = "start_date, end_date"),
-        @Index(name = "idx_absence_justified", columnList = "justified")
-})
+@Document(collection = "absences")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,33 +20,25 @@ import java.time.temporal.ChronoUnit;
 @Builder
 public class Absence extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @DBRef
     private StudentProfile student;
 
     @NotNull
-    @Column(name = "start_date", nullable = false, columnDefinition = "TEXT")
     private LocalDate startDate;
 
     @NotNull
-    @Column(name = "end_date", nullable = false, columnDefinition = "TEXT")
     private LocalDate endDate;
 
-    @Column(length = 300)
     private String reason;
 
-    @Column(nullable = false)
     @Builder.Default
     private Boolean justified = false;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "document_id")
+    @DBRef
     private MedicalDocument document;
 
-    @Column(length = 100)
     private String subject;
 
-    @Column(name = "reported_by", length = 100)
     private String reportedBy;
 
     // ── Business methods ────────────────────────────────────
@@ -72,9 +62,8 @@ public class Absence extends BaseEntity {
         this.justified = true;
     }
 
-    @PrePersist
-    @PreUpdate
-    private void validateDates() {
+    /** Appelé par les services avant sauvegarde (remplace @PrePersist/@PreUpdate JPA). */
+    public void validateDates() {
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
             throw new IllegalArgumentException(
                     "La date de fin ne peut pas être antérieure à la date de début"

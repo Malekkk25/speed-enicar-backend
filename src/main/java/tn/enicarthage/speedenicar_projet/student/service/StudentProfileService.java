@@ -2,7 +2,6 @@ package tn.enicarthage.speedenicar_projet.student.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.student.dto.response.StudentProfileResponse;
 import tn.enicarthage.speedenicar_projet.student.entity.StudentProfile;
 import tn.enicarthage.speedenicar_projet.student.repository.StudentProfileRepository;
@@ -13,7 +12,6 @@ public class StudentProfileService {
 
     private final StudentProfileRepository studentProfileRepository;
 
-    @Transactional(readOnly = true)
     public StudentProfileResponse getProfileByUserId(Long userId) {
         StudentProfile profile = studentProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profil non trouvé"));

@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.common.enums.AppointmentStatus;
 import tn.enicarthage.speedenicar_projet.common.exception.ResourceNotFoundException;
 import tn.enicarthage.speedenicar_projet.module_psychologue.appointment.Appointment;
@@ -31,7 +30,6 @@ public class ConsultationService {
      * Le psychologue cree la salle de consultation avant le RDV.
      * Seul le psychologue assigne peut creer la session.
      */
-    @Transactional
     public ConsultationDto.SessionResponse createSession(Long appointmentId, User currentUser) {
         Appointment appointment = appointmentRepository.findById(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Appointment non trouve"));
@@ -81,7 +79,6 @@ public class ConsultationService {
      * Recuperer les infos d'une session par son roomId.
      * Accessible uniquement aux 2 participants du RDV.
      */
-    @Transactional(readOnly = true)
     public ConsultationDto.SessionResponse getSession(String roomId, User currentUser) {
         ConsultationSession session = sessionRepository.findByRoomId(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session non trouvee"));
@@ -93,7 +90,6 @@ public class ConsultationService {
     /**
      * Recuperer la session liee a un appointment.
      */
-    @Transactional(readOnly = true)
     public ConsultationDto.SessionResponse getSessionByAppointment(Long appointmentId, User currentUser) {
         ConsultationSession session = sessionRepository.findByAppointmentId(appointmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Aucune session pour ce rendez-vous"));
@@ -105,7 +101,6 @@ public class ConsultationService {
     /**
      * Enregistrer qu'un participant a rejoint la salle.
      */
-    @Transactional
     public ConsultationDto.SessionResponse markJoined(String roomId, User currentUser) {
         ConsultationSession session = sessionRepository.findByRoomId(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session non trouvee"));
@@ -134,7 +129,6 @@ public class ConsultationService {
     /**
      * Terminer la session (l'un ou l'autre participant peut terminer).
      */
-    @Transactional
     public ConsultationDto.SessionResponse endSession(String roomId, User currentUser) {
         ConsultationSession session = sessionRepository.findByRoomId(roomId)
                 .orElseThrow(() -> new ResourceNotFoundException("Session non trouvee"));
@@ -154,6 +148,7 @@ public class ConsultationService {
 
         Appointment appointment = session.getAppointment();
         appointment.setStatus(AppointmentStatus.COMPLETED);
+        appointmentRepository.save(appointment);
 
         log.info("Session terminee: roomId={}, duree={}min", roomId, session.getDurationMinutes());
         return toResponse(sessionRepository.save(session));

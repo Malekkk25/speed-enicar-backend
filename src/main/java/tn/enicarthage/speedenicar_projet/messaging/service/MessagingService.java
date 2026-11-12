@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.common.enums.NotificationType;
 import tn.enicarthage.speedenicar_projet.common.exception.BusinessException;
 import tn.enicarthage.speedenicar_projet.common.exception.ResourceNotFoundException;
@@ -24,7 +23,6 @@ import tn.enicarthage.speedenicar_projet.user.repository.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class MessagingService {
 
     private final ConversationRepository conversationRepo;
@@ -62,7 +60,6 @@ public class MessagingService {
                 .map(msg -> toMessageResponse(msg, userId));
     }
 
-    @Transactional
     public MessageResponse sendMessage(Long senderId, SendMessageRequest request) {
         User sender = userRepo.findById(senderId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -129,7 +126,6 @@ public class MessagingService {
         return response;
     }
 
-    @Transactional
     public void markConversationAsRead(Long userId, Long conversationId) {
         Conversation conv = conversationRepo.findById(conversationId)
                 .orElseThrow(() -> new ResourceNotFoundException(

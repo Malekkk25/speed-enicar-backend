@@ -1,14 +1,15 @@
 package tn.enicarthage.speedenicar_projet.student.entity;
 
-import jakarta.persistence.*;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import tn.enicarthage.speedenicar_projet.common.BaseEntity;
 import tn.enicarthage.speedenicar_projet.common.enums.MoodLevel;
-import org.hibernate.annotations.JdbcTypeCode; // <-- AJOUTER CET IMPORT
-import org.hibernate.type.SqlTypes;
 import java.time.LocalDate;
 
 /**
@@ -20,13 +21,7 @@ import java.time.LocalDate;
  *
  * Contrainte unique : (student_id, date) — une humeur par jour.
  */
-@Entity
-@Table(name = "mood_entries", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_mood_student_date", columnNames = {"student_id", "date"})
-}, indexes = {
-        @Index(name = "idx_mood_student", columnList = "student_id"),
-        @Index(name = "idx_mood_date", columnList = "date")
-})
+@Document(collection = "mood_entries")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -34,35 +29,26 @@ import java.time.LocalDate;
 @Builder
 public class MoodEntry extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @DBRef
     private StudentProfile student;
 
     @NotNull
     @Min(1)
     @Max(5)
-    @Column(name = "mood_level", nullable = false)
     private Integer moodLevel;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "mood_label", length = 20)
     private MoodLevel moodLabel;
 
-    @Column(length = 10)
     private String emoji;
 
-    @Column(columnDefinition = "TEXT")
     private String note;
 
     @NotNull
-    @Column(nullable = false, columnDefinition = "TEXT")
     private LocalDate date;
     /**
      * Activités du jour — stockées en JSON.
      * Exemple : ["sport", "lecture", "amis"]
      */
-    @JdbcTypeCode(SqlTypes.JSON) // <--- C'EST CETTE LIGNE QUI CORRIGE L'ERREUR
-    @Column(columnDefinition = "json")
     private String activities;
 }
 

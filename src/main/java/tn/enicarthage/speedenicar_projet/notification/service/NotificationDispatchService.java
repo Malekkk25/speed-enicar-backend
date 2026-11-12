@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import tn.enicarthage.speedenicar_projet.common.enums.NotificationType; // Assurez-vous du bon import
 import tn.enicarthage.speedenicar_projet.notification.dto.NotificationPayload;
@@ -26,7 +25,6 @@ public class NotificationDispatchService {
      * @param recipient Utilisateur destinataire
      * @param payload   Contenu de la notification
      */
-    @Transactional
     public void sendToUser(User recipient, NotificationPayload payload) {
 
         // 1. Construire l'entité Notification avec les VRAIES données du payload

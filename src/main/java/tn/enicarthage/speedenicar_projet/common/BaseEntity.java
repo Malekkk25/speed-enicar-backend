@@ -1,41 +1,31 @@
 package tn.enicarthage.speedenicar_projet.common;
 
-
-import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * Base de tous les documents MongoDB.
+ * L'id reste un Long (généré par {@link SequenceGeneratorService}) pour garder
+ * le même contrat d'API qu'avec l'ancienne base SQL.
+ */
 @Getter
 @Setter
-@MappedSuperclass
-@EntityListeners(AuditingEntityListener.class)
 public abstract class BaseEntity implements Serializable {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /*@CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @LastModifiedDate
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;*/
     @CreatedDate
-    @Column(name = "created_at", nullable = false, updatable = false, columnDefinition = "TEXT")
     private LocalDateTime createdAt;
 
     @LastModifiedDate
-    @Column(name = "updated_at", columnDefinition = "TEXT")
     private LocalDateTime updatedAt;
 
-    @Column(name = "is_deleted", nullable = false)
     private Boolean deleted = false;
 }

@@ -1,11 +1,9 @@
 package tn.enicarthage.speedenicar_projet.module_psychologue.repository;
 
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import tn.enicarthage.speedenicar_projet.common.enums.AlertSeverity;
 import tn.enicarthage.speedenicar_projet.module_psychologue.entity.ConfidentialRecord;
@@ -14,56 +12,41 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface ConfidentialRecordRepository extends JpaRepository<ConfidentialRecord ,Long > {
+public interface ConfidentialRecordRepository extends MongoRepository<ConfidentialRecord, Long> {
 
+    @Query(value = "{ 'student.$id': ?0, 'psychologist.$id': ?1, 'deleted': false }", sort = "{ 'sessionDate': -1 }")
     Page<ConfidentialRecord> findByStudentIdAndPsychologistIdAndDeletedFalseOrderBySessionDateDesc(
             Long studentId, Long psychologistId, Pageable pageable);
 
+    @Query(value = "{ 'psychologist.$id': ?0, 'deleted': false }", sort = "{ 'sessionDate': -1 }")
     Page<ConfidentialRecord> findByPsychologistIdAndDeletedFalseOrderBySessionDateDesc(
             Long psychologistId, Pageable pageable);
 
-    List<ConfidentialRecord> findByStudentIdAndDeletedFalseOrderBySessionDateDesc(
-            Long studentId);
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false }", sort = "{ 'sessionDate': -1 }")
+    List<ConfidentialRecord> findByStudentIdAndDeletedFalseOrderBySessionDateDesc(Long studentId);
 
-    @Query("SELECT cr FROM ConfidentialRecord cr " +
-            "JOIN FETCH cr.student sp " +
-            "JOIN FETCH sp.user u " +
-            "WHERE cr.psychologist.id = :psyId " +
-            "AND cr.riskLevel IN :levels " +
-            "AND cr.deleted = false " +
-            "ORDER BY cr.sessionDate DESC")
-    List<ConfidentialRecord> findByPsychologistAndRiskLevels(
-            @Param("psyId") Long psychologistId,
-            @Param("levels") List<AlertSeverity> riskLevels);
+    @Query(value = "{ 'psychologist.$id': ?0, 'riskLevel': { $in: ?1 }, 'deleted': false }",
+            sort = "{ 'sessionDate': -1 }")
+    List<ConfidentialRecord> findByPsychologistAndRiskLevels(Long psychologistId, List<AlertSeverity> riskLevels);
 
+    @Query(value = "{ 'psychologist.$id': ?0, 'followUpRequired': true, 'deleted': false }",
+            sort = "{ 'sessionDate': 1 }")
+    List<ConfidentialRecord> findPendingFollowUps(Long psychologistId);
 
-    @Query("SELECT cr FROM ConfidentialRecord cr " +
-            "JOIN FETCH cr.student sp " +
-            "JOIN FETCH sp.user u " +
-            "WHERE cr.psychologist.id = :psyId " +
-            "AND cr.followUpRequired = true " +
-            "AND cr.deleted = false " +
-            "ORDER BY cr.sessionDate ASC")
-    List<ConfidentialRecord> findPendingFollowUps(@Param("psyId") Long psychologistId);
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false }", sort = "{ 'sessionDate': -1 }")
+    List<ConfidentialRecord> findLatestByStudent(Long studentId, Pageable pageable);
 
-    @Query("SELECT cr FROM ConfidentialRecord cr " +
-            "WHERE cr.student.id = :studentId " +
-            "AND cr.deleted = false " +
-            "ORDER BY cr.sessionDate DESC")
-    List<ConfidentialRecord> findLatestByStudent(
-            @Param("studentId") Long studentId, Pageable pageable);
-
+    @Query(value = "{ 'psychologist.$id': ?0, 'sessionDate': { $gte: ?1, $lte: ?2 }, 'deleted': false }", count = true)
     long countByPsychologistIdAndSessionDateBetweenAndDeletedFalse(
             Long psychologistId, LocalDate startDate, LocalDate endDate);
 
-    @Query("SELECT DISTINCT cr.student.id FROM ConfidentialRecord cr " +
-            "WHERE cr.psychologist.id = :psyId " +
-            "AND cr.deleted = false")
-    List<Long> findDistinctStudentIds(@Param("psyId") Long psychologistId);
+    @Query(value = "{ 'psychologist.$id': ?0, 'deleted': false }")
+    List<ConfidentialRecord> findAllByPsychologistId(Long psychologistId);
+
+    default List<Long> findDistinctStudentIds(Long psychologistId) {
+        return findAllByPsychologistId(psychologistId).stream()
+                .map(r -> r.getStudent().getId())
+                .distinct()
+                .toList();
+    }
 }
-
-
-
-
-
-

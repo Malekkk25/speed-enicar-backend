@@ -18,6 +18,7 @@ import java.util.List;
 public class AcademicAnalysisService {
 
     private final StudentProfileRepository studentRepo;
+    private final tn.enicarthage.speedenicar_projet.student.service.StudentMetricsService metrics;
 
     // ═══════════════════════════════════════════
     // ANALYSER UN SEUL ÉTUDIANT
@@ -51,16 +52,13 @@ public class AcademicAnalysisService {
     private AcademicAnalysisResult buildResult(StudentProfile student) {
 
         // 1. Moyenne générale en % (utilise la méthode de ton amie)
-        double averagePercent = student.getAverageGrade(null);
+        double averagePercent = metrics.averageGrade(student, null);
 
         // 2. Absences injustifiées (méthode de ton amie)
-        long unjustifiedAbsences = student.countUnjustifiedAbsences();
+        long unjustifiedAbsences = metrics.countUnjustifiedAbsences(student);
 
         // 3. Total jours d'absence
-        long totalAbsenceDays = student.getAbsences().stream()
-                .filter(a -> Boolean.FALSE.equals(a.getDeleted()))
-                .mapToLong(Absence::getDurationInDays)
-                .sum();
+        long totalAbsenceDays = metrics.totalAbsenceDays(student);
 
         // 4. Score IA basé sur notes + absences uniquement
         double score = calculateRiskScore(

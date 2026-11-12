@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import tn.enicarthage.speedenicar_projet.common.enums.NotificationType;
 import tn.enicarthage.speedenicar_projet.common.exception.ResourceNotFoundException;
@@ -17,7 +16,6 @@ import tn.enicarthage.speedenicar_projet.user.entity.User;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class NotificationService {
 
     private final NotificationRepository notificationRepo;
@@ -43,7 +41,6 @@ public class NotificationService {
 
     // ── Commands ────────────────────────────────────────────
 
-    @Transactional
     public NotificationResponse markAsRead(Long userId, Long notificationId) {
         Notification notif = notificationRepo.findById(notificationId)
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -55,12 +52,10 @@ public class NotificationService {
         return toResponse(notificationRepo.save(notif));
     }
 
-    @Transactional
     public int markAllAsRead(Long userId) {
         return notificationRepo.markAllAsRead(userId);
     }
 
-    @Transactional
     public void send(User recipient, String title, String message,
                      NotificationType type, String link, String senderName) {
         Notification notif = Notification.builder()

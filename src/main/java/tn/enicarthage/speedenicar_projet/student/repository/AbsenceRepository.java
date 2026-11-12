@@ -2,9 +2,8 @@ package tn.enicarthage.speedenicar_projet.student.repository;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import tn.enicarthage.speedenicar_projet.student.entity.Absence;
 
@@ -12,43 +11,30 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Repository
-public interface AbsenceRepository extends JpaRepository<Absence, Long> {
+public interface AbsenceRepository extends MongoRepository<Absence, Long> {
 
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false }", sort = "{ 'startDate': -1 }")
     Page<Absence> findByStudentIdAndDeletedFalseOrderByStartDateDesc(Long studentId, Pageable pageable);
 
+    @Query("{ 'student.$id': ?0, 'justified': false, 'deleted': false }")
     List<Absence> findByStudentIdAndJustifiedFalseAndDeletedFalse(Long studentId);
 
-    @Query("SELECT a FROM Absence a " +
-            "WHERE a.student.id = :studentId " +
-            "AND a.startDate >= :startDate " +
-            "AND a.endDate <= :endDate " +
-            "AND a.deleted = false " +
-            "ORDER BY a.startDate DESC")
-    List<Absence> findByStudentIdAndPeriod(
-            @Param("studentId") Long studentId,
-            @Param("startDate") LocalDate startDate,
-            @Param("endDate") LocalDate endDate);
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false }", sort = "{ 'startDate': -1 }")
+    List<Absence> findActiveByStudentId(Long studentId);
 
-    @Query(
-            value = "SELECT * FROM absence WHERE deleted = 0 AND justified = 0 " +
-                    "AND (julianday(end_date) - julianday(start_date)) > 3 " +
-                    "ORDER BY start_date DESC",
-            countQuery = "SELECT count(*) FROM absence WHERE deleted = 0 AND justified = 0 " +
-                    "AND (julianday(end_date) - julianday(start_date)) > 3",
-            nativeQuery = true
-    )
+    @Query(value = "{ 'student.$id': ?0, 'startDate': { $gte: ?1 }, 'endDate': { $lte: ?2 }, 'deleted': false }",
+            sort = "{ 'startDate': -1 }")
+    List<Absence> findByStudentIdAndPeriod(Long studentId, LocalDate startDate, LocalDate endDate);
+
+    /** Absences injustifiees de plus de 3 jours (3 * 86 400 000 ms). */
+    @Query(value = "{ 'deleted': false, 'justified': false, "
+            + "$expr: { $gt: [ { $subtract: ['$endDate', '$startDate'] }, 259200000 ] } }",
+            sort = "{ 'startDate': -1 }")
     Page<Absence> findProlongedUnjustified(Pageable pageable);
 
-    @Query("SELECT COUNT(a) FROM Absence a " +
-            "WHERE a.student.id = :studentId " +
-            "AND a.justified = false " +
-            "AND a.deleted = false")
-    Long countUnjustified(@Param("studentId") Long studentId);
+    @Query(value = "{ 'student.$id': ?0, 'justified': false, 'deleted': false }", count = true)
+    Long countUnjustified(Long studentId);
 
-    @Query("SELECT COUNT(a) FROM Absence a " +
-            "WHERE a.student.id = :studentId " +
-            "AND a.deleted = false " +
-            "AND a.startDate >= :startDate")
-    Long getTotalAbsenceDays(@Param("studentId") Long studentId, @Param("startDate") LocalDate startDate);
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false, 'startDate': { $gte: ?1 } }", count = true)
+    Long getTotalAbsenceDays(Long studentId, LocalDate startDate);
 }
-

@@ -9,6 +9,7 @@ import tn.enicarthage.speedenicar_projet.scolarity.dto.response.AcademicAnalysis
 import tn.enicarthage.speedenicar_projet.scolarity.service.AcademicAnalysisService;
 import tn.enicarthage.speedenicar_projet.student.entity.StudentProfile;
 import tn.enicarthage.speedenicar_projet.student.repository.StudentProfileRepository;
+import tn.enicarthage.speedenicar_projet.student.service.StudentMetricsService;
 import tn.enicarthage.speedenicar_projet.user.entity.User;
 
 import java.util.List;
@@ -26,6 +27,9 @@ class AcademicAnalysisServiceIntegrationTest {
     @MockBean
     private StudentProfileRepository studentProfileRepository;
 
+    @MockBean
+    private StudentMetricsService metrics;
+
     @Test
     void analyzeStudent_ShouldExecuteWithinTransactionAndReturnLowRiskResult() {
         // 1. Arrange : Préparation des données de test
@@ -41,9 +45,9 @@ class AcademicAnalysisServiceIntegrationTest {
         when(fakeStudent.getDeleted()).thenReturn(false);
 
         // On simule un profil d'étudiant avec des notes moyennes et peu d'absences
-        when(fakeStudent.getAverageGrade(null)).thenReturn(60.0); // 60% de moyenne
-        when(fakeStudent.countUnjustifiedAbsences()).thenReturn(2L); // 2 absences injustifiées
-        when(fakeStudent.getAbsences()).thenReturn(List.of());
+        when(metrics.averageGrade(fakeStudent, null)).thenReturn(60.0); // 60% de moyenne
+        when(metrics.countUnjustifiedAbsences(fakeStudent)).thenReturn(2L); // 2 absences injustifiées
+        when(metrics.totalAbsenceDays(fakeStudent)).thenReturn(0L);
 
         // On simule le retour de la base de données
         when(studentProfileRepository.findById(studentId)).thenReturn(Optional.of(fakeStudent));

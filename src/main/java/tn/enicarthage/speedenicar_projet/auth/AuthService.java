@@ -3,7 +3,6 @@ package tn.enicarthage.speedenicar_projet.auth;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.auth.dto.AuthResponse;
 import tn.enicarthage.speedenicar_projet.auth.dto.LoginRequest;
 import tn.enicarthage.speedenicar_projet.auth.dto.RefreshTokenRequest;
@@ -33,7 +32,6 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
-    @Transactional
     public AuthResponse login(LoginRequest request) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -59,7 +57,6 @@ public class AuthService {
                 user.getEmail(), user.getFirstName(), user.getLastName(), user.getRole());
     }
 
-    @Transactional
     public AuthResponse register(RegisterRequest request) {
         if (userRepo.existsByEmail(request.getEmail())) {
             throw new BusinessException("Un compte avec cet email existe déjà");

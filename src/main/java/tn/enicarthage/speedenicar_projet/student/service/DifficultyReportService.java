@@ -2,7 +2,6 @@ package tn.enicarthage.speedenicar_projet.student.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.common.enums.DifficultyType;
 import tn.enicarthage.speedenicar_projet.common.enums.UrgencyLevel;
 import tn.enicarthage.speedenicar_projet.student.dto.request.DifficultyReportRequest;
@@ -25,7 +24,6 @@ public class DifficultyReportService {
     private final StudentProfileRepository studentProfileRepository;
     private final UserRepository userRepository;
 
-    @Transactional
     public DifficultyReportResponse createReport(String email, DifficultyReportRequest request) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));

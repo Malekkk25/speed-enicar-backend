@@ -1,30 +1,27 @@
 package tn.enicarthage.speedenicar_projet.scolarity.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import tn.enicarthage.speedenicar_projet.student.entity.AcademicRecord;
 
 import java.util.List;
 
 @Repository
-public interface AcademicRecordRepository
-        extends JpaRepository<AcademicRecord, Long> {
+public interface AcademicRecordRepository extends MongoRepository<AcademicRecord, Long> {
 
+    @Query("{ 'student.$id': ?0 }")
     List<AcademicRecord> findByStudentId(Long studentId);
 
-    List<AcademicRecord> findByStudentIdAndSemester(
-            Long studentId, String semester);
+    @Query("{ 'student.$id': ?0, 'semester': ?1 }")
+    List<AcademicRecord> findByStudentIdAndSemester(Long studentId, String semester);
 
-    @Query("SELECT a FROM AcademicRecord a " +
-            "WHERE a.student.id = :studentId " +
-            "AND a.deleted = false " +
-            "ORDER BY a.semester ASC")
-    List<AcademicRecord> findActiveByStudentId(@Param("studentId") Long studentId);
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false }", sort = "{ 'semester': 1 }")
+    List<AcademicRecord> findActiveByStudentId(Long studentId);
 
+    @Query(value = "{ 'student.$id': ?0, 'deleted': false }", sort = "{ 'semester': 1 }")
     List<AcademicRecord> findByStudentIdAndDeletedFalseOrderBySemesterAsc(Long studentId);
 
-    List<AcademicRecord> findByStudentIdAndSemesterAndDeletedFalse(
-            Long studentId, String semester);
+    @Query("{ 'student.$id': ?0, 'semester': ?1, 'deleted': false }")
+    List<AcademicRecord> findByStudentIdAndSemesterAndDeletedFalse(Long studentId, String semester);
 }

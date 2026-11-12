@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.common.enums.DocStatus;
 import tn.enicarthage.speedenicar_projet.module_psychologue.document.MedicalDocument;
 import tn.enicarthage.speedenicar_projet.scolarity.dto.response.*;
@@ -31,7 +30,6 @@ import tn.enicarthage.speedenicar_projet.user.repository.UserRepository;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class ScolarityService {
 
 
@@ -40,6 +38,8 @@ public class ScolarityService {
     private final AcademicRecordRepository   academicRepo;
     private final UserRepository             userRepo;
     private final PasswordEncoder passwordEncoder;
+    private final tn.enicarthage.speedenicar_projet.student.service.StudentMetricsService metrics;
+    private final MedicalDocumentRepository medicalDocRepo;
     // ════════════════════════════════════════════════════════
     // DOSSIERS ÉTUDIANTS
     // ════════════════════════════════════════════════════════
@@ -56,7 +56,6 @@ public class ScolarityService {
         return toStudentDossierFull(student);
     }
 
-    @Transactional
     public StudentDossierResponse createStudent(CreateStudentRequest req) {
         if (userRepo.existsByEmail(req.getEmail())) {
             throw new IllegalArgumentException("Email déjà utilisé : " + req.getEmail());
@@ -107,11 +106,11 @@ public class ScolarityService {
                 .map(this::toAbsenceResponse)
                 .toList();
     }
-    @Transactional
     public AbsenceResponse justifyAbsence(Long absenceId, boolean justified) {
         Absence absence = absenceRepo.findById(absenceId)
                 .orElseThrow(() -> new NoSuchElementException("Absence introuvable : " + absenceId));
         absence.setJustified(justified);
+        absence.validateDates();
         absenceRepo.save(absence);
         log.info("Absence {} marquée comme {}", absenceId, justified ? "justifiée" : "non justifiée");
         return toAbsenceResponse(absence);
@@ -132,7 +131,6 @@ public class ScolarityService {
                 .toList();
     }
 
-    @Transactional
     public AcademicRecordResponse addGrade(Long studentId,
                                            AcademicRecord record) {
         StudentProfile student = studentRepo.findById(studentId)
@@ -158,21 +156,20 @@ public class ScolarityService {
                 .department(s.getDepartment())
                 .level(s.getLevel())
                 .enrollmentYear(s.getEnrollmentYear())
-                .unjustifiedAbsencesCount(s.countUnjustifiedAbsences())
-                .averageGrade(s.getAverageGrade(null))
+                .unjustifiedAbsencesCount(metrics.countUnjustifiedAbsences(s))
+                .averageGrade(metrics.averageGrade(s, null))
                 .build();
     }
 
     private StudentDossierResponse toStudentDossierFull(StudentProfile s) {
-        List<MedicalDocumentResponse> pendingDocs = s.getMedicalDocuments()
+        List<MedicalDocumentResponse> pendingDocs = medicalDocRepo.findByStudentIdAndStatusOrderByCreatedAtDesc(s.getId(), DocStatus.PENDING)
                 .stream()
                 .filter(d -> DocStatus.PENDING.equals(d.getStatus()))
                 .map(this::toDocumentResponse)
                 .toList();
 
-        List<AbsenceResponse> prolonged = s.getAbsences()
+        List<AbsenceResponse> prolonged = metrics.activeAbsences(s)
                 .stream()
-                .filter(a -> Boolean.FALSE.equals(a.getDeleted()))
                 .filter(Absence::isProlonged)
                 .map(this::toAbsenceResponse)
                 .toList();
@@ -195,8 +192,8 @@ public class ScolarityService {
                 .pendingDocuments(pendingDocs)
                 .prolongedAbsences(prolonged)
                 .grades(grades)
-                .unjustifiedAbsencesCount(s.countUnjustifiedAbsences())
-                .averageGrade(s.getAverageGrade(null))
+                .unjustifiedAbsencesCount(metrics.countUnjustifiedAbsences(s))
+                .averageGrade(metrics.averageGrade(s, null))
                 .build();
     }
 

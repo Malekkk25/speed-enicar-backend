@@ -21,10 +21,10 @@ REST API for **SpeedENICar**, a student support platform for ENICarthage. It han
 | Layer      | Tools                                             |
 |------------|---------------------------------------------------|
 | Language   | Java 17                                           |
-| Framework  | Spring Boot, Spring Web, Spring Data JPA          |
+| Framework  | Spring Boot, Spring Web, Spring Data MongoDB      |
 | Security   | Spring Security, JWT (jjwt)                       |
 | Realtime   | Spring WebSocket (STOMP)                          |
-| Database   | PostgreSQL                                        |
+| Database   | MongoDB                                           |
 | Mail       | Spring Mail, Thymeleaf email templates            |
 | Other      | Bean Validation, Actuator, Lombok, Maven          |
 
@@ -47,40 +47,40 @@ REST API for **SpeedENICar**, a student support platform for ENICarthage. It han
 
 - JDK 17+
 - Maven (or use the included `mvnw`)
-- PostgreSQL
+- MongoDB Community Server 7+ (running locally on port 27017)
 
 ### Setup
 
-1. **Create the database**
-   ```sql
-   CREATE DATABASE speedenicarthage;
+1. **Get the database connection string** from the project owner (shared MongoDB Atlas cluster), and ask to have your IP added in Atlas under *Network Access*.
+
+2. **Create your local config** (git-ignored):
+   ```bash
+   cp src/main/resources/application-local.properties.example src/main/resources/application-local.properties
    ```
+   Then put the real `spring.data.mongodb.uri` in it. Mail settings are optional (only needed to send real emails).
 
-2. **Configure** `src/main/resources/application.properties` with your own values:
-   ```properties
-   server.port=8088
-
-   spring.datasource.url=jdbc:postgresql://localhost:5432/speedenicarthage
-   spring.datasource.username=YOUR_DB_USER
-   spring.datasource.password=YOUR_DB_PASSWORD
-
-   app.jwt.secret=YOUR_LONG_RANDOM_SECRET
-   app.jwt.expiration-ms=86400000
-   app.jwt.refresh-expiration-ms=604800000
-
-   spring.mail.username=YOUR_EMAIL
-   spring.mail.password=YOUR_APP_PASSWORD
-   ```
-   Keep real credentials out of Git: use environment variables (for example `${DB_PASSWORD}`) or a local, git-ignored config file.
-
-3. **Run**
+3. **Run with the `local` profile**
    ```bash
    git clone https://github.com/Malekkk25/speed-enicar-backend.git
    cd speed-enicar-backend
-   ./mvnw spring-boot:run
+   ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
    ```
+   In IntelliJ: *Run > Edit Configurations > Active profiles = local*.
 
-The API is available at <http://localhost:8088/api>. Tables are created automatically (`spring.jpa.hibernate.ddl-auto=update`).
+   Alternatively, use a local MongoDB (`mongodb://localhost:27017/speedenicarthage`, the default) and skip the profile.
+
+The API is available at <http://localhost:8088/api>. Collections and indexes are created automatically. You can also override the connection with the `MONGODB_URI` environment variable.
+
+### Demo accounts
+
+On startup an empty database is filled with demo data (students, moods, grades, absences, appointments, records, messages...). Disable with `app.seed.enabled=false`.
+
+| Role | Email | Password |
+|------|-------|----------|
+| ADMIN | `admin@enicar.tn` | `Admin@123` |
+| SCOLARITY | `scolarite@enicar.tn` | `Scolarite@123` |
+| PSYCHOLOGIST | `psy@enicar.tn` / `psy2@enicar.tn` | `Psy@12345` |
+| STUDENT | `student@enicar.tn` (+ `yasmine@`, `omar@`, `ines@`, `mehdi@`, `salma@enicar.tn`) | `Student@123` |
 
 ## Project structure
 
@@ -88,7 +88,7 @@ The API is available at <http://localhost:8088/api>. Tables are created automati
 src/main/java/tn/enicarthage/speedenicar_projet/
 ├── auth/                # login, register, refresh
 ├── security/            # JWT filter and services
-├── config/              # security, WebSocket, JPA, async
+├── config/              # security, WebSocket, MongoDB, async
 ├── user/                # user entities and repositories
 ├── student/             # student features
 ├── module_psychologue/  # appointments, consultations, records, schedule

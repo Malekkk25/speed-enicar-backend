@@ -4,7 +4,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.common.enums.AppointmentStatus;
 import tn.enicarthage.speedenicar_projet.common.enums.AppointmentType;
 import tn.enicarthage.speedenicar_projet.common.enums.LocationType; // 👈 NOUVEL IMPORT À VÉRIFIER
@@ -92,7 +91,6 @@ public class StudentAppointmentService {
         }
         return availableResponses;
     }
-    @Transactional
     public AppointmentResponse requestAppointment(Long userId, AppointmentRequest request) {
         StudentProfile student = studentProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profil étudiant introuvable"));
@@ -185,7 +183,6 @@ public class StudentAppointmentService {
         return response;
     }
 
-    @Transactional(readOnly = true)
     public Page<AppointmentResponse> getStudentAppointments(Long userId, Pageable pageable) {
         StudentProfile student = studentProfileRepository.findByUserId(userId)
                 .orElseThrow(() -> new RuntimeException("Profil étudiant introuvable"));

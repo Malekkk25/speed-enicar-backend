@@ -6,7 +6,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import tn.enicarthage.speedenicar_projet.common.enums.AlertSeverity;
 import tn.enicarthage.speedenicar_projet.common.enums.AppointmentStatus;
 import tn.enicarthage.speedenicar_projet.common.enums.DocStatus;
@@ -41,7 +40,6 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional(readOnly = true)
 public class PsychologistService {
     private final MedicalDocumentRepository  documentRepo;
     private final UserRepository userRepo;
@@ -120,7 +118,6 @@ public class PsychologistService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public List<TimeSlotResponse> updateSchedule(Long userId, ScheduleUpdateRequest request) {
         User psy = getPsychologistById(userId);
 
@@ -139,7 +136,6 @@ public class PsychologistService {
         }
 
         timeSlotRepo.deleteByPsychologistId(psy.getId());
-        timeSlotRepo.flush();
 
         List<TimeSlot> newSlots = request.getSlots().stream()
                 .map(req -> {
@@ -193,7 +189,6 @@ public class PsychologistService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public MedicalDocumentResponse updateDocumentStatus(Long psyUserId, Long documentId, String status, String reason) {
         MedicalDocument document = medicalDocumentRepository.findById(documentId)
                 .orElseThrow(() -> new RuntimeException("Document introuvable avec l'ID: " + documentId));
@@ -232,21 +227,18 @@ public class PsychologistService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
     public AppointmentResponse confirmAppointment(Long userId, Long appointmentId) {
         Appointment appointment = findAppointmentForPsychologist(userId, appointmentId);
         appointment.confirm();
         return toAppointmentResponse(appointmentRepo.save(appointment));
     }
 
-    @Transactional
     public AppointmentResponse cancelAppointment(Long userId, Long appointmentId, String reason) {
         Appointment appointment = findAppointmentForPsychologist(userId, appointmentId);
         appointment.cancel(userId, reason);
         return toAppointmentResponse(appointmentRepo.save(appointment));
     }
 
-    @Transactional
     public AppointmentResponse completeAppointment(Long userId, Long appointmentId, String notes) {
         Appointment appointment = findAppointmentForPsychologist(userId, appointmentId);
         appointment.complete(notes);
@@ -270,7 +262,6 @@ public class PsychologistService {
                 .map(this::toRecordResponse);
     }
 
-    @Transactional
     public RecordResponse createRecord(Long userId, CreateRecordRequest request) {
         User psy = getPsychologistById(userId);
         StudentProfile student = studentProfileRepo.findById(request.getStudentId())
@@ -293,7 +284,6 @@ public class PsychologistService {
         return toRecordResponse(recordRepo.save(record));
     }
 
-    @Transactional
     public RecordResponse updateRecord(Long userId, Long recordId, UpdateRecordRequest request) {
         User psy = getPsychologistById(userId);
         ConfidentialRecord record = recordRepo.findById(recordId)
@@ -315,7 +305,6 @@ public class PsychologistService {
         return toRecordResponse(recordRepo.save(record));
     }
 
-    @Transactional
     public void deleteRecord(Long userId, Long recordId) {
         User psy = getPsychologistById(userId);
         ConfidentialRecord record = recordRepo.findById(recordId)
@@ -469,7 +458,6 @@ public class PsychologistService {
                 .toList();
     }
 
-    @Transactional
     public MedicalDocumentResponse validateDocument(Long docId, Long agentId) {
         MedicalDocument doc = documentRepo.findById(docId)
                 .orElseThrow(() -> new NoSuchElementException(
@@ -492,7 +480,6 @@ public class PsychologistService {
         return toDocumentResponse(doc);
     }
 
-    @Transactional
     public MedicalDocumentResponse rejectDocument(Long docId,
                                                   String reason,
                                                   Long agentId) {

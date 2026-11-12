@@ -2,71 +2,52 @@ package tn.enicarthage.speedenicar_projet.module_psychologue.document;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 import tn.enicarthage.speedenicar_projet.common.enums.DocStatus;
 
 import java.util.List;
 
 @Repository
-public interface MedicalDocumentRepository extends JpaRepository<MedicalDocument, Long> {
+public interface MedicalDocumentRepository extends MongoRepository<MedicalDocument, Long> {
 
-    // ═══════════════════════════════════════════════════════════════
-    // 🔹 POUR ÉTUDIANT (getMyDocuments, upload)
-    // ═══════════════════════════════════════════════════════════════
+    // ── Etudiant ────────────────────────────────────────────────
 
-    // Tous les documents d'un étudiant (triés récent → ancien)
+    @Query(value = "{ 'student.$id': ?0 }", sort = "{ 'createdAt': -1 }")
     List<MedicalDocument> findByStudentIdOrderByCreatedAtDesc(Long studentId);
 
-    // Documents d'un étudiant par status
+    @Query(value = "{ 'student.$id': ?0, 'status': ?1 }", sort = "{ 'createdAt': -1 }")
     List<MedicalDocument> findByStudentIdAndStatusOrderByCreatedAtDesc(Long studentId, DocStatus status);
 
-    // Compteur documents étudiant
+    @Query(value = "{ 'student.$id': ?0 }", count = true)
     long countByStudentId(Long studentId);
 
-    // Vérif doublon fichier
+    @Query(value = "{ 'student.$id': ?0, 'fileName': ?1 }", exists = true)
     boolean existsByStudentIdAndFileName(Long studentId, String fileName);
 
-    // ═══════════════════════════════════════════════════════════════
-    // 🔹 POUR PSYCHOLOGUE (dashboard, liste)
-    // ═══════════════════════════════════════════════════════════════
+    // ── Psychologue / scolarite ─────────────────────────────────
 
-    // Documents par status (PENDING pour travail psy)
     List<MedicalDocument> findByStatusOrderByCreatedAtAsc(DocStatus status);
+
     Page<MedicalDocument> findByStatusOrderByCreatedAtAsc(DocStatus status, Pageable pageable);
 
-    // Compteurs par status (dashboard)
     long countByStatus(DocStatus status);
 
-    // ═══════════════════════════════════════════════════════════════
-    // 🔹 SÉCURITÉ & DOWNLOAD
-    // ═══════════════════════════════════════════════════════════════
+    // ── Securite & download ─────────────────────────────────────
 
-    // Vérif document existe + status OK pour download
+    @Query(value = "{ '_id': ?0, 'status': ?1 }", exists = true)
     boolean existsByIdAndStatus(Long id, DocStatus status);
 
-    // ═══════════════════════════════════════════════════════════════
-    // 🔹 RECHERCHE AVANCÉE (avec JOIN FETCH anti-N+1)
-    // ═══════════════════════════════════════════════════════════════
+    // ── Recherche ───────────────────────────────────────────────
 
-    // Documents étudiant + infos complètes (évite N+1 queries)
-    @Query("SELECT d FROM MedicalDocument d " +
-            "JOIN FETCH d.student s " +
-            "JOIN FETCH s.user u " +
-            "WHERE s.id = :studentId " +
-            "ORDER BY d.createdAt DESC")
-    List<MedicalDocument> findByStudentIdWithStudent(@Param("studentId") Long studentId);
+    default List<MedicalDocument> findByStudentIdWithStudent(Long studentId) {
+        return findByStudentIdOrderByCreatedAtDesc(studentId);
+    }
 
-    // Liste PENDING psy + infos étudiant
-    @Query("SELECT d FROM MedicalDocument d " +
-            "JOIN FETCH d.student s " +
-            "JOIN FETCH s.user u " +
-            "WHERE d.status = 'PENDING' " +
-            "ORDER BY d.createdAt ASC")
-    List<MedicalDocument> findPendingWithStudentInfo();
+    default List<MedicalDocument> findPendingWithStudentInfo() {
+        return findByStatusOrderByCreatedAtAsc(DocStatus.PENDING);
+    }
 
-    // Recherche par nom fichier
     List<MedicalDocument> findByFileNameContainingIgnoreCaseOrderByCreatedAtDesc(String fileName);
 }

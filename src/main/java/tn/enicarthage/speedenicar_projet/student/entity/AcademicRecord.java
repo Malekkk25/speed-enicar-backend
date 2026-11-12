@@ -1,19 +1,16 @@
 package tn.enicarthage.speedenicar_projet.student.entity;
 
-import jakarta.persistence.*;
-import jakarta.persistence.Index;
-import jakarta.persistence.Table;
+import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.DBRef;
+import org.springframework.data.mongodb.core.index.Indexed;
+
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.*;
 import tn.enicarthage.speedenicar_projet.common.BaseEntity;
 
-@Entity
-@Table(name = "academic_records", indexes = {
-        @Index(name = "idx_academic_student", columnList = "student_id"),
-        @Index(name = "idx_academic_semester", columnList = "semester, academic_year")
-})
+@Document(collection = "academic_records")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -21,30 +18,23 @@ import tn.enicarthage.speedenicar_projet.common.BaseEntity;
 @Builder
 public class AcademicRecord extends BaseEntity {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "student_id", nullable = false)
+    @DBRef
     private StudentProfile student;
 
     @NotBlank
-    @Column(nullable = false, length = 100)
     private String subject;
 
     @NotNull
     @PositiveOrZero
-    @Column(nullable = false)
     private Double grade;
 
     @NotNull
-    @Column(name = "max_grade", nullable = false)
     private Double maxGrade;
 
-    @Column(length = 10)
     private String semester;
 
-    @Column(name = "academic_year", length = 20)
     private String academicYear;
 
-    @Column(nullable = false)
     @Builder.Default
     private Double coefficient = 1.0;
 
