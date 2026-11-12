@@ -1,0 +1,9 @@
+# Copy this file to application-local.properties (git-ignored) and fill in your values.
+# Then run the app with the "local" profile (IntelliJ: Active profiles = local).
+
+# MongoDB Atlas connection string (ask the project owner)
+spring.data.mongodb.uri=mongodb+srv://USER:PASSWORD@CLUSTER.mongodb.net/speedenicarthage?retryWrites=true&w=majority
+
+# Optional: only needed to send real emails (Gmail app password)
+spring.mail.username=
+spring.mail.password=
