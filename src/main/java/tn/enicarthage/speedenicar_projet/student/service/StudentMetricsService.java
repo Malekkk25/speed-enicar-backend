@@ -21,6 +21,7 @@ public class StudentMetricsService {
     public double averageGrade(StudentProfile student, String semester) {
         return academicRepo.findByStudentIdAndDeletedFalseOrderBySemesterAsc(student.getId()).stream()
                 .filter(r -> semester == null || semester.equals(r.getSemester()))
+                .filter(r -> r.getGrade() != null && r.getMaxGrade() != null && r.getMaxGrade() != 0)
                 .mapToDouble(r -> (r.getGrade() / r.getMaxGrade()) * 100)
                 .average()
                 .orElse(0.0);

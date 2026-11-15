@@ -47,6 +47,7 @@ public class ScolarityService {
     public Page<StudentDossierResponse> getAllStudents(Pageable pageable) {
         return studentRepo.findAll(pageable)
                 .map(this::toStudentDossierLight);
+        // NB : les profils sans utilisateur lié sont gérés par le mapper (valeurs nulles)
     }
 
     public StudentDossierResponse getStudentById(Long id) {
@@ -96,13 +97,12 @@ public class ScolarityService {
     // ════════════════════════════════════════════════════════
 
     public List<AbsenceResponse> getProlongedAbsences(int thresholdDays) {
-        LocalDate threshold = LocalDate.now().minusDays(thresholdDays);
         return absenceRepo.findAll()
                 .stream()
-                .filter(a -> Boolean.FALSE.equals(a.getDeleted()))
-                .filter(a -> Boolean.FALSE.equals(a.getJustified()))
-                .filter(a -> a.getStartDate() != null &&
-                        a.getStartDate().isBefore(threshold))
+                .filter(a -> !Boolean.TRUE.equals(a.getDeleted()))
+                .filter(a -> !Boolean.TRUE.equals(a.getJustified()))
+                .filter(a -> a.getStudent() != null)
+                .filter(a -> a.getDurationInDays() > thresholdDays)
                 .map(this::toAbsenceResponse)
                 .toList();
     }
@@ -147,12 +147,13 @@ public class ScolarityService {
     // ════════════════════════════════════════════════════════
 
     private StudentDossierResponse toStudentDossierLight(StudentProfile s) {
+        User u = s.getUser();
         return StudentDossierResponse.builder()
                 .id(s.getId())
                 .studentId(s.getStudentId())
-                .firstName(s.getUser().getFirstName())
-                .lastName(s.getUser().getLastName())
-                .email(s.getUser().getEmail())
+                .firstName(u != null ? u.getFirstName() : null)
+                .lastName(u != null ? u.getLastName() : null)
+                .email(u != null ? u.getEmail() : null)
                 .department(s.getDepartment())
                 .level(s.getLevel())
                 .enrollmentYear(s.getEnrollmentYear())
@@ -180,12 +181,13 @@ public class ScolarityService {
                         .map(this::toAcademicRecordResponse)
                         .toList();
 
+        User u = s.getUser();
         return StudentDossierResponse.builder()
                 .id(s.getId())
                 .studentId(s.getStudentId())
-                .firstName(s.getUser().getFirstName())
-                .lastName(s.getUser().getLastName())
-                .email(s.getUser().getEmail())
+                .firstName(u != null ? u.getFirstName() : null)
+                .lastName(u != null ? u.getLastName() : null)
+                .email(u != null ? u.getEmail() : null)
                 .department(s.getDepartment())
                 .level(s.getLevel())
                 .enrollmentYear(s.getEnrollmentYear())
@@ -198,11 +200,12 @@ public class ScolarityService {
     }
 
     private MedicalDocumentResponse toDocumentResponse(MedicalDocument d) {
-        String studentName = d.getStudent().getUser().getFirstName()
-                + " " + d.getStudent().getUser().getLastName();
+        StudentProfile st = d.getStudent();
+        String studentName = (st != null && st.getUser() != null)
+                ? st.getUser().getFirstName() + " " + st.getUser().getLastName() : "";
         return MedicalDocumentResponse.builder()
                 .id(d.getId())
-                .studentId(d.getStudent().getId())
+                .studentId(st != null ? st.getId() : null)
                 .studentName(studentName)
                 .fileName(d.getFileName())
                 .fileType(d.getMimeType())
@@ -215,11 +218,12 @@ public class ScolarityService {
     }
 
     private AbsenceResponse toAbsenceResponse(Absence a) {
-        String studentName = a.getStudent().getUser().getFirstName()
-                + " " + a.getStudent().getUser().getLastName();
+        StudentProfile st = a.getStudent();
+        String studentName = (st != null && st.getUser() != null)
+                ? st.getUser().getFirstName() + " " + st.getUser().getLastName() : "";
         return AbsenceResponse.builder()
                 .id(a.getId())
-                .studentId(a.getStudent().getId())
+                .studentId(st != null ? st.getId() : null)
                 .studentName(studentName)
                 .startDate(a.getStartDate())
                 .endDate(a.getEndDate())

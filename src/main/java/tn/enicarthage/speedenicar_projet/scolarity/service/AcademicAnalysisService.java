@@ -37,7 +37,8 @@ public class AcademicAnalysisService {
 
     public List<AcademicAnalysisResult> analyzeAllAtRisk() {
         return studentRepo.findAll().stream()
-                .filter(s -> Boolean.FALSE.equals(s.getDeleted()))
+                .filter(s -> !Boolean.TRUE.equals(s.getDeleted()))
+                .filter(s -> s.getUser() != null)
                 .map(this::buildResult)
                 .filter(r -> r.getRiskLevel() != RiskLevel.LOW)
                 .sorted((a, b) ->
@@ -66,16 +67,17 @@ public class AcademicAnalysisService {
 
         RiskLevel level = determineRiskLevel(score);
 
-        log.info("IA — {} {} : score={} niveau={}",
-                student.getUser().getFirstName(),
-                student.getUser().getLastName(),
-                Math.round(score), level);
+        var user = student.getUser();
+        String name = user != null
+                ? (user.getFirstName() + " " + user.getLastName()).trim()
+                : "Inconnu (" + student.getStudentId() + ")";
+
+        log.info("IA — {} : score={} niveau={}", name, Math.round(score), level);
 
         return AcademicAnalysisResult.builder()
                 .studentId(student.getId())
-                .studentName(student.getUser().getFirstName()
-                        + " " + student.getUser().getLastName())
-                .studentEmail(student.getUser().getEmail())
+                .studentName(name)
+                .studentEmail(user != null ? user.getEmail() : null)
                 .riskScore(Math.round(score * 10.0) / 10.0)
                 .riskLevel(level)
                 .averageGradePercent(Math.round(averagePercent * 10.0) / 10.0)
