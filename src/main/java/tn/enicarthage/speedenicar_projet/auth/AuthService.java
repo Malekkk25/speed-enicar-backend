@@ -9,6 +9,7 @@ import tn.enicarthage.speedenicar_projet.auth.dto.RefreshTokenRequest;
 import tn.enicarthage.speedenicar_projet.auth.dto.RegisterRequest;
 import tn.enicarthage.speedenicar_projet.common.enums.Role;
 import tn.enicarthage.speedenicar_projet.common.exception.BusinessException;
+import tn.enicarthage.speedenicar_projet.common.exception.InvalidTokenException;
 import tn.enicarthage.speedenicar_projet.student.entity.StudentProfile;
 import tn.enicarthage.speedenicar_projet.student.repository.StudentProfileRepository;
 import tn.enicarthage.speedenicar_projet.user.entity.User;
@@ -114,13 +115,13 @@ public class AuthService {
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
         String token = request.getRefreshToken();
-        if (!jwtUtils.validateToken(token)) {
-            throw new BusinessException("Refresh token invalide ou expiré");
+        if (!jwtUtils.isValidRefreshToken(token)) {
+            throw new InvalidTokenException("Refresh token invalide ou expiré");
         }
 
         String email = jwtUtils.extractEmail(token);
         User user = userRepo.findByEmail(email)
-                .orElseThrow(() -> new BusinessException("Utilisateur introuvable"));
+                .orElseThrow(() -> new InvalidTokenException("Utilisateur introuvable"));
 
         String newAccessToken = jwtUtils.generateAccessToken(
                 user.getId(), user.getEmail(), user.getRole().name());

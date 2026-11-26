@@ -49,6 +49,7 @@ public class JwtUtils {
 
     public String generateRefreshToken(String email) {
         return Jwts.builder()
+                .claim("type", "refresh")
                 .subject(email)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + refreshExpirationMs))
@@ -95,7 +96,14 @@ public class JwtUtils {
         catch (UnsupportedJwtException e)  { log.warn("Token non supporte : {}", e.getMessage()); }
         catch (MalformedJwtException e)    { log.warn("Token malforme : {}", e.getMessage()); }
         catch (IllegalArgumentException e) { log.warn("Token vide : {}", e.getMessage()); }
+        catch (JwtException e)             { log.warn("Token invalide : {}", e.getMessage()); }
         return false;
+    }
+
+    /** Vrai seulement pour un token valide ET de type "refresh". */
+    public boolean isValidRefreshToken(String token) {
+        if (!validateToken(token)) return false;
+        return "refresh".equals(extractAllClaims(token).get("type"));
     }
 
     public boolean isTokenValid(String token, UserDetails userDetails) {
